@@ -1,0 +1,25 @@
+services:
+  sundew:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - sundew-data:/app/data
+    environment:
+      - SUNDEW_LOG_LEVEL=info
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  sundew-data:

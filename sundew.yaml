@@ -1,0 +1,22 @@
+traps:
+  mcp_server: true
+  rest_api: true
+  ai_discovery: true
+
+persona: auto  # or path to custom persona.yaml
+
+llm:
+  provider: ollama  # ollama, anthropic, openai, none
+  model: llama3
+
+server:
+  host: 0.0.0.0
+  port: 8080
+
+storage:
+  database: ./data/sundew.db
+  log_file: ./data/events.jsonl
+
+logging:
+  level: info
+  output: stdout

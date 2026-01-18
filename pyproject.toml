@@ -1,0 +1,87 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sundew"
+version = "0.1.0"
+description = "An open-source honeypot designed to detect and study autonomous AI agent attacks"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.11"
+authors = [
+    { name = "Sundew Contributors" },
+]
+keywords = ["honeypot", "security", "ai-agents", "deception", "mcp"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+]
+dependencies = [
+    "fastapi>=0.115.0,<1.0.0",
+    "uvicorn[standard]>=0.32.0,<1.0.0",
+    "pydantic>=2.10.0,<3.0.0",
+    "pydantic-settings>=2.6.0,<3.0.0",
+    "pyyaml>=6.0.2,<7.0.0",
+    "click>=8.1.0,<9.0.0",
+    "httpx>=0.28.0,<1.0.0",
+    "rich>=13.9.0,<14.0.0",
+    "mcp>=1.0.0,<2.0.0",
+]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.40.0,<1.0.0"]
+openai = ["openai>=1.55.0,<2.0.0"]
+all = ["anthropic>=0.40.0,<1.0.0", "openai>=1.55.0,<2.0.0"]
+dev = [
+    "pytest>=8.3.0,<9.0.0",
+    "pytest-asyncio>=0.24.0,<1.0.0",
+    "pytest-cov>=6.0.0,<7.0.0",
+    "ruff>=0.8.0,<1.0.0",
+    "mypy>=1.13.0,<2.0.0",
+    "httpx>=0.28.0,<1.0.0",
+    "pip-audit>=2.7.0,<3.0.0",
+    "bandit>=1.7.0,<2.0.0",
+]
+
+[project.scripts]
+sundew = "sundew.cli:main"
+
+[project.urls]
+Homepage = "https://sundew.sh"
+Documentation = "https://docs.sundew.sh"
+Repository = "https://github.com/sundew-sh/sundew"
+Issues = "https://github.com/sundew-sh/sundew/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sundew"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "SIM", "TCH"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["sundew"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+
+[tool.bandit]
+exclude_dirs = ["tests"]
+skips = ["B101"]  # assert is fine in production for invariant checks

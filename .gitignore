@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# Data (generated at runtime)
+data/*.db
+data/*.jsonl
+!data/demo_sundew.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Sundew runtime
+persona.yaml
+*.log
+nohup.out
