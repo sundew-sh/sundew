@@ -1,0 +1,93 @@
+{
+  "name": "saas",
+  "industry": "saas",
+  "description": "SaaS platform API persona with workspaces, users, and integrations",
+  "persona_defaults": {
+    "data_theme": "workspaces",
+    "auth_scheme": "bearer",
+    "error_style": "simple_json"
+  },
+  "templates": [
+    {
+      "endpoint": "/api/v1/workspaces",
+      "method": "GET",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {"X-Request-Id": "{{request_id}}"},
+      "body_template": "{\"workspaces\": [{\"id\": \"ws_{{random_id}}\", \"name\": \"Engineering\", \"slug\": \"engineering\", \"member_count\": 24, \"plan\": \"business\", \"created_at\": \"{{timestamp}}\"}], \"meta\": {\"page\": 1, \"per_page\": 20, \"total\": 3}}",
+      "description": "List workspaces"
+    },
+    {
+      "endpoint": "/api/v1/workspaces/{{random_id}}",
+      "method": "GET",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "body_template": "{\"id\": \"ws_{{random_id}}\", \"name\": \"Engineering\", \"slug\": \"engineering\", \"member_count\": 24, \"plan\": \"business\", \"settings\": {\"sso_enabled\": true, \"default_role\": \"member\"}, \"created_at\": \"{{timestamp}}\"}",
+      "description": "Get workspace detail"
+    },
+    {
+      "endpoint": "/api/v1/users",
+      "method": "GET",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "body_template": "{\"users\": [{\"id\": \"usr_{{random_id}}\", \"email\": \"dev@example.com\", \"name\": \"Alex Chen\", \"role\": \"admin\", \"status\": \"active\", \"last_active\": \"{{timestamp}}\"}], \"meta\": {\"page\": 1, \"per_page\": 20, \"total\": 24}}",
+      "description": "List users"
+    },
+    {
+      "endpoint": "/api/v1/users",
+      "method": "POST",
+      "status_code": 201,
+      "content_type": "application/json",
+      "headers": {},
+      "body_template": "{\"id\": \"usr_{{random_id}}\", \"email\": \"new@example.com\", \"name\": \"New User\", \"role\": \"member\", \"status\": \"pending\", \"invite_sent_at\": \"{{timestamp}}\"}",
+      "description": "Invite user"
+    },
+    {
+      "endpoint": "/api/v1/integrations",
+      "method": "GET",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "body_template": "{\"integrations\": [{\"id\": \"int_{{random_id}}\", \"name\": \"Slack\", \"status\": \"connected\", \"scopes\": [\"chat:write\", \"channels:read\"], \"connected_at\": \"{{timestamp}}\"}, {\"id\": \"int_{{random_id}}\", \"name\": \"GitHub\", \"status\": \"connected\", \"scopes\": [\"repo\", \"workflow\"], \"connected_at\": \"{{timestamp}}\"}]}",
+      "description": "List integrations"
+    },
+    {
+      "endpoint": "/api/v1/webhooks",
+      "method": "GET",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "body_template": "{\"webhooks\": [{\"id\": \"whk_{{random_id}}\", \"url\": \"https://hooks.example.com/events\", \"events\": [\"user.created\", \"workspace.updated\"], \"active\": true, \"created_at\": \"{{timestamp}}\"}]}",
+      "description": "List webhooks"
+    },
+    {
+      "endpoint": "/api/v1/health",
+      "method": "GET",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "body_template": "{\"status\": \"operational\", \"version\": \"3.8.1\", \"timestamp\": \"{{timestamp}}\", \"components\": {\"api\": \"operational\", \"database\": \"operational\", \"search\": \"operational\", \"realtime\": \"operational\"}}",
+      "description": "Health check"
+    },
+    {
+      "endpoint": "/api/v1/auth/token",
+      "method": "POST",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "body_template": "{\"access_token\": \"sk_live_{{random_id}}\", \"token_type\": \"bearer\", \"expires_in\": 7200, \"refresh_token\": \"rt_{{random_id}}\"}",
+      "description": "Generate access token"
+    },
+    {
+      "endpoint": "/api/v1/openapi.json",
+      "method": "GET",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "body_template": "{\"openapi\": \"3.1.0\", \"info\": {\"title\": \"{{company_name}} Platform API\", \"version\": \"3.8.1\", \"description\": \"Manage workspaces, users, and integrations.\"}, \"servers\": [{\"url\": \"/api/v1\"}], \"paths\": {\"/workspaces\": {\"get\": {\"summary\": \"List workspaces\"}, \"post\": {\"summary\": \"Create workspace\"}}, \"/users\": {\"get\": {\"summary\": \"List users\"}, \"post\": {\"summary\": \"Invite user\"}}}}",
+      "description": "OpenAPI specification"
+    }
+  ]
+}

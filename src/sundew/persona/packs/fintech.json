@@ -1,0 +1,102 @@
+{
+  "name": "fintech",
+  "industry": "fintech",
+  "description": "Financial technology API persona with payments, transactions, and account management",
+  "persona_defaults": {
+    "data_theme": "payments",
+    "auth_scheme": "bearer",
+    "error_style": "rfc7807"
+  },
+  "templates": [
+    {
+      "endpoint": "/api/v1/payments",
+      "method": "GET",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {"X-RateLimit-Limit": "1000", "X-RateLimit-Remaining": "994"},
+      "body_template": "{\"data\": [{\"id\": \"pay_{{random_id}}\", \"amount\": {{random_int}}, \"currency\": \"USD\", \"status\": \"completed\", \"created_at\": \"{{timestamp}}\"}], \"has_more\": true, \"total_count\": 1842, \"request_id\": \"req_{{request_id}}\"}",
+      "description": "List payments with pagination"
+    },
+    {
+      "endpoint": "/api/v1/payments/{{random_id}}",
+      "method": "GET",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "body_template": "{\"id\": \"pay_{{random_id}}\", \"amount\": 4999, \"currency\": \"USD\", \"status\": \"completed\", \"description\": \"Subscription renewal\", \"customer_id\": \"cus_{{random_id}}\", \"payment_method\": {\"type\": \"card\", \"last4\": \"4242\", \"brand\": \"visa\"}, \"created_at\": \"{{timestamp}}\", \"metadata\": {}}",
+      "description": "Get payment detail"
+    },
+    {
+      "endpoint": "/api/v1/payments",
+      "method": "POST",
+      "status_code": 201,
+      "content_type": "application/json",
+      "headers": {},
+      "body_template": "{\"id\": \"pay_{{random_id}}\", \"amount\": 2500, \"currency\": \"USD\", \"status\": \"processing\", \"created_at\": \"{{timestamp}}\", \"request_id\": \"req_{{request_id}}\"}",
+      "description": "Create payment"
+    },
+    {
+      "endpoint": "/api/v1/transactions",
+      "method": "GET",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "body_template": "{\"data\": [{\"id\": \"txn_{{random_id}}\", \"amount\": -{{random_int}}, \"balance\": 125043, \"type\": \"debit\", \"description\": \"Wire transfer\", \"created_at\": \"{{timestamp}}\"}], \"has_more\": true}",
+      "description": "List transactions"
+    },
+    {
+      "endpoint": "/api/v1/accounts",
+      "method": "GET",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "body_template": "{\"data\": [{\"id\": \"acct_{{random_id}}\", \"name\": \"Operating Account\", \"balance\": 425000, \"currency\": \"USD\", \"status\": \"active\", \"created_at\": \"{{timestamp}}\"}]}",
+      "description": "List accounts"
+    },
+    {
+      "endpoint": "/api/v1/accounts/{{random_id}}",
+      "method": "GET",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "body_template": "{\"id\": \"acct_{{random_id}}\", \"name\": \"Operating Account\", \"balance\": 425000, \"currency\": \"USD\", \"status\": \"active\", \"routing_number\": \"110000000\", \"account_type\": \"checking\", \"created_at\": \"{{timestamp}}\"}",
+      "description": "Get account detail"
+    },
+    {
+      "endpoint": "/api/v1/webhooks",
+      "method": "GET",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "body_template": "{\"data\": [{\"id\": \"wh_{{random_id}}\", \"url\": \"https://example.com/webhooks\", \"events\": [\"payment.completed\", \"payment.failed\"], \"active\": true}]}",
+      "description": "List webhooks"
+    },
+    {
+      "endpoint": "/api/v1/health",
+      "method": "GET",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "body_template": "{\"status\": \"healthy\", \"version\": \"2.14.0\", \"timestamp\": \"{{timestamp}}\", \"services\": {\"database\": \"ok\", \"cache\": \"ok\", \"queue\": \"ok\"}}",
+      "description": "Health check"
+    },
+    {
+      "endpoint": "/api/v1/auth/token",
+      "method": "POST",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "body_template": "{\"access_token\": \"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.{{random_id}}\", \"token_type\": \"bearer\", \"expires_in\": 3600, \"scope\": \"payments:read payments:write\"}",
+      "description": "Generate auth token"
+    },
+    {
+      "endpoint": "/api/v1/openapi.json",
+      "method": "GET",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "body_template": "{\"openapi\": \"3.1.0\", \"info\": {\"title\": \"{{company_name}} Payments API\", \"version\": \"2.14.0\", \"description\": \"Process payments, manage accounts, and track transactions.\"}, \"servers\": [{\"url\": \"/api/v1\"}], \"paths\": {\"/payments\": {\"get\": {\"summary\": \"List payments\", \"operationId\": \"listPayments\"}, \"post\": {\"summary\": \"Create payment\", \"operationId\": \"createPayment\"}}}}",
+      "description": "OpenAPI specification"
+    }
+  ]
+}

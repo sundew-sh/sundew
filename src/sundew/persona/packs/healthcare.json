@@ -1,0 +1,93 @@
+{
+  "name": "healthcare",
+  "industry": "healthcare",
+  "description": "Healthcare API persona with patients, appointments, and medical records",
+  "persona_defaults": {
+    "data_theme": "patients",
+    "auth_scheme": "oauth2",
+    "error_style": "rfc7807"
+  },
+  "templates": [
+    {
+      "endpoint": "/api/v1/patients",
+      "method": "GET",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {"X-Request-Id": "{{request_id}}", "X-HIPAA-Audit": "true"},
+      "body_template": "{\"data\": [{\"id\": \"pat_{{random_id}}\", \"mrn\": \"MRN-{{random_int}}\", \"name\": \"Jane Smith\", \"date_of_birth\": \"1985-03-15\", \"status\": \"active\", \"primary_provider_id\": \"prov_{{random_id}}\", \"last_visit\": \"{{timestamp}}\"}], \"meta\": {\"page\": 1, \"per_page\": 20, \"total\": 1247}}",
+      "description": "List patients"
+    },
+    {
+      "endpoint": "/api/v1/patients/{{random_id}}",
+      "method": "GET",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {"X-HIPAA-Audit": "true"},
+      "body_template": "{\"id\": \"pat_{{random_id}}\", \"mrn\": \"MRN-{{random_int}}\", \"name\": \"Jane Smith\", \"date_of_birth\": \"1985-03-15\", \"gender\": \"female\", \"status\": \"active\", \"insurance\": {\"provider\": \"Blue Cross\", \"plan_id\": \"BC-{{random_int}}\"}, \"primary_provider_id\": \"prov_{{random_id}}\", \"allergies\": [\"penicillin\"], \"created_at\": \"{{timestamp}}\"}",
+      "description": "Get patient detail"
+    },
+    {
+      "endpoint": "/api/v1/appointments",
+      "method": "GET",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "body_template": "{\"data\": [{\"id\": \"apt_{{random_id}}\", \"patient_id\": \"pat_{{random_id}}\", \"provider_id\": \"prov_{{random_id}}\", \"type\": \"follow_up\", \"status\": \"scheduled\", \"scheduled_at\": \"{{timestamp}}\", \"duration_minutes\": 30}], \"meta\": {\"page\": 1, \"total\": 89}}",
+      "description": "List appointments"
+    },
+    {
+      "endpoint": "/api/v1/appointments",
+      "method": "POST",
+      "status_code": 201,
+      "content_type": "application/json",
+      "headers": {},
+      "body_template": "{\"id\": \"apt_{{random_id}}\", \"patient_id\": \"pat_{{random_id}}\", \"provider_id\": \"prov_{{random_id}}\", \"type\": \"consultation\", \"status\": \"scheduled\", \"scheduled_at\": \"{{timestamp}}\", \"created_at\": \"{{timestamp}}\"}",
+      "description": "Schedule appointment"
+    },
+    {
+      "endpoint": "/api/v1/records",
+      "method": "GET",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {"X-HIPAA-Audit": "true"},
+      "body_template": "{\"data\": [{\"id\": \"rec_{{random_id}}\", \"patient_id\": \"pat_{{random_id}}\", \"type\": \"lab_result\", \"title\": \"Complete Blood Count\", \"status\": \"final\", \"date\": \"{{timestamp}}\"}], \"meta\": {\"page\": 1, \"total\": 342}}",
+      "description": "List medical records"
+    },
+    {
+      "endpoint": "/api/v1/providers",
+      "method": "GET",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "body_template": "{\"data\": [{\"id\": \"prov_{{random_id}}\", \"name\": \"Dr. Sarah Johnson\", \"specialty\": \"Internal Medicine\", \"npi\": \"{{random_int}}\", \"status\": \"active\", \"accepting_patients\": true}]}",
+      "description": "List providers"
+    },
+    {
+      "endpoint": "/api/v1/health",
+      "method": "GET",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "body_template": "{\"status\": \"healthy\", \"version\": \"4.2.1\", \"timestamp\": \"{{timestamp}}\", \"compliance\": {\"hipaa\": true, \"hitrust\": true}, \"services\": {\"ehr\": \"ok\", \"fhir\": \"ok\", \"scheduler\": \"ok\"}}",
+      "description": "Health check"
+    },
+    {
+      "endpoint": "/api/v1/auth/token",
+      "method": "POST",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "body_template": "{\"access_token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.{{random_id}}\", \"token_type\": \"bearer\", \"expires_in\": 1800, \"scope\": \"patient:read appointment:write\", \"id_token\": \"eyJ0eXAi.{{random_id}}\"}",
+      "description": "OAuth2 token exchange"
+    },
+    {
+      "endpoint": "/api/v1/openapi.json",
+      "method": "GET",
+      "status_code": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "body_template": "{\"openapi\": \"3.1.0\", \"info\": {\"title\": \"{{company_name}} Healthcare API\", \"version\": \"4.2.1\", \"description\": \"HIPAA-compliant API for patient management, scheduling, and medical records.\"}, \"servers\": [{\"url\": \"/api/v1\"}], \"paths\": {\"/patients\": {\"get\": {\"summary\": \"List patients\"}}, \"/appointments\": {\"get\": {\"summary\": \"List appointments\"}, \"post\": {\"summary\": \"Schedule appointment\"}}}}",
+      "description": "OpenAPI specification"
+    }
+  ]
+}
