@@ -12,7 +12,7 @@
   <a href="https://github.com/sundew-sh/sundew/actions"><img src="https://img.shields.io/github/actions/workflow/status/sundew-sh/sundew/ci.yml?branch=main&style=flat-square" alt="CI"></a>
   <a href="https://pypi.org/project/sundew/"><img src="https://img.shields.io/pypi/v/sundew?style=flat-square&color=16A34A" alt="PyPI"></a>
   <a href="https://hub.docker.com/r/sundewsh/sundew"><img src="https://img.shields.io/docker/v/sundewsh/sundew?style=flat-square&label=docker&color=16A34A" alt="Docker"></a>
-  <a href="https://github.com/sundew-sh/sundew/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"></a>
+  <a href="https://github.com/sundew-sh/sundew/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="License"></a>
   <a href="https://docs.sundew.sh"><img src="https://img.shields.io/badge/docs-docs.sundew.sh-16A34A?style=flat-square" alt="Docs"></a>
 </p>
 
@@ -251,7 +251,7 @@ Full documentation is available at [docs.sundew.sh](https://docs.sundew.sh):
 
 ## Contributing
 
-Sundew is open source under the MIT license. We welcome contributions of all kinds.
+Sundew is open source under the Apache 2.0 license. We welcome contributions of all kinds.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, code style, and how to submit pull requests.
 
@@ -268,7 +268,7 @@ Sundew was created for a DEFCON presentation on detecting autonomous AI agent at
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) for details.
+Apache License 2.0. See [LICENSE](LICENSE) for details.
 
 ---
 
