@@ -29,6 +29,7 @@ htmlcov/
 # Data (generated at runtime)
 data/*.db
 data/*.jsonl
+data/template_cache.json
 !data/demo_sundew.db
 
 # OS
