@@ -1,0 +1,215 @@
+---
+title: "Personas"
+description: "The persona engine generates unique deployment identities that make every Sundew instance look like a different real service."
+---
+
+The persona engine is what makes Sundew novel. Instead of deploying a honeypot with fixed, detectable signatures, every Sundew instance generates a unique identity that shapes everything a visitor observes.
+
+## Why Personas Matter
+
+Honeypots have a fundamental weakness: once their signatures are known, they become detectable. This has been an accepted trade-off for decades because human attackers rarely maintain comprehensive honeypot signature databases.
+
+AI agents change this equation. An autonomous agent with internet access can:
+
+1. Search for "sundew honeypot" and read the source code
+2. Learn what default Sundew responses look like
+3. Test every service it encounters against those patterns
+4. Skip anything that matches
+
+The persona engine ensures that knowing Sundew's source code provides zero advantage in detecting any specific deployment. Each instance is genuinely unique.
+
+## Persona Structure
+
+A persona is a YAML document that defines a coherent identity:
+
+```yaml
+persona:
+  company_name: "Northvane Analytics"
+  industry: "fintech"
+  api_style: "rest"
+  framework_fingerprint: "express"
+  error_style: "verbose"
+  auth_scheme: "bearer_jwt"
+  data_theme: "financial"
+  response_latency_ms: [80, 350]
+  server_header: "nginx/1.24.0"
+  endpoint_prefix: "/api/v2"
+  seed: 847291
+```
+
+Each field controls specific observable behaviors:
+
+### Identity Fields
+
+| Field | Controls | Example values |
+|-------|----------|---------------|
+| `company_name` | Branding in responses and docs | "Northvane Analytics", "Cedarpoint Health" |
+| `industry` | Overall theme for data and tools | `fintech`, `healthcare`, `saas`, `e-commerce` |
+
+### API Surface Fields
+
+| Field | Controls | Example values |
+|-------|----------|---------------|
+| `api_style` | API architecture | `rest`, `graphql`, `grpc-web` |
+| `endpoint_prefix` | URL path prefix | `/api/v2`, `/v1`, `/rest/v1` |
+| `auth_scheme` | Authentication type | `bearer_jwt`, `api_key`, `basic`, `oauth2` |
+
+### Mimicry Fields
+
+| Field | Controls | Example values |
+|-------|----------|---------------|
+| `framework_fingerprint` | HTTP headers, error formats | `express`, `django`, `spring`, `rails` |
+| `error_style` | Error response verbosity | `verbose`, `terse`, `structured` |
+| `server_header` | Server response header | `nginx/1.24.0`, `Apache/2.4.57` |
+| `response_latency_ms` | Artificial latency range | `[80, 350]`, `[200, 800]` |
+
+### Data Fields
+
+| Field | Controls | Example values |
+|-------|----------|---------------|
+| `data_theme` | Fake data content theme | `financial`, `medical`, `users`, `retail` |
+| `seed` | Deterministic random seed | Any integer |
+
+## How Personas Are Generated
+
+### With an LLM (Recommended)
+
+When an LLM backend is configured, Sundew generates personas in two phases:
+
+**Phase 1: Identity generation.** Sundew prompts the LLM to create a coherent company identity -- name, industry, API conventions, and technical stack. The LLM produces a persona YAML that feels like a real company's infrastructure.
+
+**Phase 2: Response template generation.** Using the persona as context, the LLM generates response templates for every trap endpoint. A fintech persona gets transaction records, account data, and financial API documentation. A healthcare persona gets patient records, appointment data, and medical API documentation.
+
+Templates include variable placeholders for dynamic fields:
+
+```json
+{
+  "id": "{{uuid}}",
+  "created_at": "{{timestamp}}",
+  "account_holder": "{{person_name}}",
+  "balance": "{{currency_amount}}",
+  "currency": "USD"
+}
+```
+
+At runtime, Sundew fills these placeholders with fresh values on each request. The structure stays consistent (important for not breaking agents mid-session) while specific values change.
+
+### Without an LLM
+
+Sundew ships with pre-built persona packs -- complete sets of persona definitions and response templates for common industries:
+
+- **Fintech** -- payment processors, banking APIs, trading platforms
+- **SaaS** -- project management, analytics, communication tools
+- **Healthcare** -- patient management, EHR systems, clinical data APIs
+
+When `llm.provider` is set to `none`, Sundew randomly selects a pack and uses it. The trade-off is less uniqueness -- multiple deployments using the same pack will share structural patterns.
+
+## Custom Personas
+
+Operators can hand-craft personas for targeted deployments. This is useful when you want the honeypot to mimic a specific type of service:
+
+```yaml
+# custom-persona.yaml
+persona:
+  company_name: "Quantix Trading Systems"
+  industry: "fintech"
+  api_style: "rest"
+  framework_fingerprint: "spring"
+  error_style: "structured"
+  auth_scheme: "oauth2"
+  data_theme: "trading"
+  response_latency_ms: [50, 200]
+  server_header: "Apache/2.4.57"
+  endpoint_prefix: "/api/v3"
+  seed: 173629
+```
+
+```bash
+sundew serve --persona custom-persona.yaml
+```
+
+If an LLM is configured, Sundew will generate response templates based on your custom persona. Without an LLM, the custom persona fields override what is loaded from the nearest matching pack.
+
+## Persona Persistence
+
+The generated persona and all response templates are saved to `./data/`:
+
+```
+data/
+├── persona.yaml          # The persona definition
+├── templates.json        # Pre-generated response templates
+└── sundew.db             # Session and event data
+```
+
+On subsequent runs, Sundew loads the existing persona and templates. This ensures consistency -- an agent mid-session will not see the persona change between restarts.
+
+To generate a fresh persona, delete `./data/persona.yaml` or use:
+
+```bash
+sundew generate --force
+```
+
+## Persona Variation in Practice
+
+Here is what two different Sundew deployments look like to a visitor:
+
+**Deployment A: Fintech**
+```
+GET /api/v2/transactions HTTP/1.1
+Host: api.northvane-analytics.internal
+
+HTTP/1.1 200 OK
+Server: nginx/1.24.0
+X-Powered-By: Express
+X-Request-Id: req_a8f3c2d1
+
+{
+  "data": [
+    {
+      "id": "txn_7a8b9c0d",
+      "amount": 2450.00,
+      "currency": "USD",
+      "account_holder": "Sarah Chen",
+      "status": "completed",
+      "created_at": "2025-01-15T09:32:11Z"
+    }
+  ],
+  "meta": { "total": 1842, "page": 1, "per_page": 20 }
+}
+```
+
+**Deployment B: Healthcare**
+```
+GET /rest/v1/patients HTTP/1.1
+Host: api.cedarpoint-health.internal
+
+HTTP/1.1 200 OK
+Server: gunicorn/21.2.0
+X-Request-ID: 8a7f6e5d-4c3b-2a1f-0e9d-8c7b6a5f4e3d
+
+{
+  "results": [
+    {
+      "patient_id": "PT-2024-08821",
+      "name": "James Morrison",
+      "date_of_birth": "1978-03-22",
+      "primary_physician": "Dr. Anika Patel",
+      "last_visit": "2025-01-12"
+    }
+  ],
+  "pagination": { "count": 3291, "offset": 0, "limit": 25 }
+}
+```
+
+Different paths, different field names, different headers, different data structure, different error formats. An agent trained on Deployment A has no advantage against Deployment B.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Custom Personas" icon="wand-magic-sparkles" href="/guides/custom-personas">
+    Build personas for specific research scenarios.
+  </Card>
+  <Card title="Anti-Fingerprinting" icon="shield-halved" href="/concepts/anti-fingerprinting">
+    How Sundew prevents detection at scale.
+  </Card>
+</CardGroup>

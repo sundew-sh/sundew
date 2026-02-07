@@ -1,0 +1,222 @@
+---
+title: "Installation"
+description: "Install Sundew via Docker, pip, or from source. Set up optional LLM backends for persona generation."
+---
+
+## System Requirements
+
+- **Python 3.11+** (for pip/source installation)
+- **Docker 24+** (for container deployment)
+- **512 MB RAM** minimum (1 GB recommended with LLM)
+- **Linux, macOS, or WSL2** (Windows native not tested)
+
+## Docker (Recommended)
+
+Docker is the fastest way to get running. No Python environment management required.
+
+```bash
+# Pull and run
+docker pull sundewsh/sundew:latest
+docker run -p 8080:8080 -v sundew-data:/app/data sundewsh/sundew
+
+# Or use docker compose (recommended for persistence)
+git clone https://github.com/sundew-sh/sundew.git
+cd sundew
+docker compose up
+```
+
+The Docker image includes everything needed -- Sundew, pre-built persona packs, and a SQLite database for event storage. Data persists in the `sundew-data` volume.
+
+### Docker Compose Configuration
+
+The `docker-compose.yml` included in the repository provides sensible defaults:
+
+```yaml
+services:
+  sundew:
+    image: sundewsh/sundew:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+      - ./sundew.yaml:/app/sundew.yaml:ro
+    environment:
+      - SUNDEW_LOG_LEVEL=info
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+```
+
+## pip
+
+Install Sundew as a Python package:
+
+```bash
+pip install sundew
+```
+
+Verify the installation:
+
+```bash
+sundew --version
+# sundew 0.1.0
+
+sundew serve
+```
+
+### Optional Dependencies
+
+Sundew supports optional LLM backends for richer persona generation:
+
+```bash
+# Anthropic Claude API
+pip install "sundew[anthropic]"
+
+# OpenAI API
+pip install "sundew[openai]"
+
+# All optional dependencies
+pip install "sundew[all]"
+```
+
+## From Source
+
+For development or to use the latest unreleased changes:
+
+```bash
+git clone https://github.com/sundew-sh/sundew.git
+cd sundew
+```
+
+### Using uv (Recommended)
+
+[uv](https://docs.astral.sh/uv/) is the fastest way to manage Python projects:
+
+```bash
+uv sync --all-extras
+uv run sundew serve
+```
+
+### Using pip
+
+```bash
+pip install -e ".[dev,all]"
+sundew serve
+```
+
+### Using Make
+
+The Makefile wraps common operations:
+
+```bash
+make run       # Start Sundew
+make test      # Run tests
+make lint      # Linting + type checking
+make fmt       # Auto-format code
+make audit     # Security audit
+```
+
+## Setting Up an LLM Backend
+
+Sundew uses an LLM at **deploy time** to generate unique persona response templates. This is optional -- Sundew ships with pre-built persona packs that work without any LLM.
+
+### Ollama (Local, Free)
+
+[Ollama](https://ollama.com) runs LLMs locally on your machine:
+
+```bash
+# Install Ollama
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Pull a model
+ollama pull llama3
+
+# Configure Sundew
+```
+
+In `sundew.yaml`:
+
+```yaml
+llm:
+  provider: ollama
+  model: llama3
+```
+
+Ollama is the recommended backend for local development. It runs on laptops with 8 GB+ RAM and produces good persona variety.
+
+### Anthropic Claude
+
+For the highest quality persona generation:
+
+```bash
+pip install "sundew[anthropic]"
+export ANTHROPIC_API_KEY=your-key-here
+```
+
+In `sundew.yaml`:
+
+```yaml
+llm:
+  provider: anthropic
+  model: claude-sonnet-4-5-20250929
+```
+
+### OpenAI
+
+```bash
+pip install "sundew[openai]"
+export OPENAI_API_KEY=your-key-here
+```
+
+In `sundew.yaml`:
+
+```yaml
+llm:
+  provider: openai
+  model: gpt-4o
+```
+
+### No LLM
+
+Sundew works without any LLM by using pre-built persona packs:
+
+```yaml
+llm:
+  provider: none
+
+persona: auto  # Randomly selects from built-in packs
+```
+
+Pre-built packs cover fintech, SaaS, and healthcare themes. The trade-off: less variation between deployments that use the same pack. For research use, an LLM backend is recommended.
+
+## Verifying Installation
+
+After installation, verify everything works:
+
+```bash
+# Check version
+sundew --version
+
+# Start with default config
+sundew serve
+
+# In another terminal, test a trap
+curl http://localhost:8080/.well-known/ai-plugin.json
+
+# Check captured events
+sundew query --last 5
+```
+
+You should see the request logged and fingerprinted in Sundew's output.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="gear" href="/getting-started/configuration">
+    Customize traps, personas, logging, and storage.
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/getting-started/quickstart">
+    Catch your first AI agent in 5 minutes.
+  </Card>
+</CardGroup>

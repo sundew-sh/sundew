@@ -1,0 +1,258 @@
+---
+title: "Analyzing Data"
+description: "Query, export, and analyze the sessions and events captured by your Sundew deployment."
+---
+
+Sundew captures every interaction in structured formats designed for analysis. This guide covers the CLI, data formats, and techniques for understanding AI agent behavior.
+
+## CLI Queries
+
+The `sundew query` command provides quick access to captured data.
+
+### Recent Sessions
+
+```bash
+# Last 10 sessions
+sundew query --last 10
+
+# Last 24 hours
+sundew query --last 24h
+```
+
+Output:
+
+```
+ID         Source         Classification  Confidence  Requests  Duration
+a3f8c2d1   83.21.4.17    ai_agent        0.91        8         4.2s
+b7c2e4f1   45.33.12.8    automated       0.52        23        1.1s
+c9d1f3a2   192.168.1.5   human           0.12        3         47.8s
+```
+
+### Filtering by Classification
+
+```bash
+# Only AI agent sessions
+sundew query --type ai_agent
+
+# Only high-confidence sessions
+sundew query --type ai_agent --min-confidence 0.85
+
+# Multiple types
+sundew query --type ai_agent --type ai_assisted
+```
+
+### Session Detail
+
+```bash
+sundew query --session a3f8c2d1
+```
+
+```
+Session: a3f8c2d1
+  Source:         83.21.4.17
+  Started:        2025-01-15 12:04:31 UTC
+  Duration:       4.2s
+  Requests:       8
+  Classification: ai_agent (confidence: 0.91)
+
+  Signals:
+    timing:       0.85
+    enumeration:  0.92
+    headers:      0.78
+    prompt_leak:  0.88
+    mcp:          1.00
+
+  Request sequence:
+    12:04:31.102  GET   /.well-known/ai-plugin.json
+    12:04:31.534  GET   /openapi.json
+    12:04:32.011  GET   /api/v2/transactions?limit=100
+    12:04:32.389  GET   /api/v2/customers
+    12:04:32.812  POST  /api/v2/auth/login
+    12:04:33.201  MCP   initialize
+    12:04:33.689  MCP   tools/list
+    12:04:34.102  MCP   tools/call: read_config
+```
+
+### Statistics
+
+```bash
+sundew stats
+```
+
+```
+Sundew Statistics
+  Uptime:             7d 14h 32m
+  Total sessions:     1,842
+  Total requests:     23,491
+
+  Classification breakdown:
+    human:            1,203 (65.3%)
+    automated:          487 (26.4%)
+    ai_assisted:        112 (6.1%)
+    ai_agent:            40 (2.2%)
+
+  Top signals for ai_agent sessions:
+    mcp:              0.94 avg
+    prompt_leak:      0.82 avg
+    enumeration:      0.79 avg
+    timing:           0.71 avg
+    headers:          0.65 avg
+
+  Busiest hours (UTC):
+    14:00-15:00       247 requests
+    02:00-03:00       198 requests
+    10:00-11:00       186 requests
+```
+
+## Data Export
+
+### JSON Export
+
+```bash
+# All sessions
+sundew export --format json > sessions.json
+
+# Anonymized (strips source IPs)
+sundew export --format json --anonymize > sessions-anon.json
+
+# Filtered
+sundew export --format json --type ai_agent > agents.json
+```
+
+### CSV Export
+
+```bash
+sundew export --format csv > sessions.csv
+```
+
+### JSONL Event Stream
+
+The raw event log at `./data/events.jsonl` contains every request as a JSON Lines entry:
+
+```json
+{
+  "timestamp": "2025-01-15T12:04:31.102Z",
+  "session_id": "a3f8c2d1",
+  "source_ip": "83.21.4.17",
+  "method": "GET",
+  "path": "/.well-known/ai-plugin.json",
+  "status": 200,
+  "user_agent": "python-httpx/0.28.0",
+  "headers": {},
+  "signals": {
+    "timing": 0.0,
+    "enumeration": 0.3,
+    "headers": 0.6,
+    "prompt_leak": 0.0,
+    "mcp": 0.0
+  },
+  "session_classification": "pending"
+}
+```
+
+This format is designed for streaming to external systems (Elasticsearch, Splunk, S3) or batch processing with tools like `jq`, pandas, or DuckDB.
+
+## Analysis Techniques
+
+### Identifying Agent Frameworks
+
+Different AI agent frameworks produce characteristic behavioral patterns:
+
+**Request ordering** -- Some frameworks always discover APIs in the same sequence (plugin manifest, then OpenAPI spec, then endpoints). Compare the request ordering across sessions to identify the same framework.
+
+**Timing profiles** -- Frameworks have characteristic timing distributions. Plot inter-request intervals to fingerprint the framework's internal processing pipeline.
+
+**Prompt leakage patterns** -- Different LLMs leak differently. GPT-4 prompts look different from Claude prompts. The specific phrases and structures in leaked prompts can identify the underlying model.
+
+**MCP behavior** -- How an agent interacts with MCP tools (which tools it calls, in what order, what parameters it uses) reveals its objectives and strategy.
+
+### Tracking Agent Evolution
+
+Deploy Sundew over time and track how AI agent behavior changes:
+
+- Are agents getting better at avoiding detection?
+- Are new frameworks appearing?
+- Do agents adapt their behavior after encountering honeypots?
+- How quickly do new attack patterns propagate?
+
+### Cross-Deployment Correlation
+
+If you run multiple Sundew instances, correlate sessions across deployments:
+
+```bash
+# Export from multiple instances
+sundew export --format json --database ./data/fintech/sundew.db > fintech.json
+sundew export --format json --database ./data/healthcare/sundew.db > healthcare.json
+```
+
+Compare: does the same agent interact differently with different persona types? Does it adjust its strategy based on the API's apparent industry?
+
+## SQLite Direct Access
+
+For advanced analysis, query the SQLite database directly:
+
+```bash
+sqlite3 ./data/sundew.db
+```
+
+Key tables:
+
+```sql
+-- Sessions with classification
+SELECT * FROM sessions
+WHERE classification = 'ai_agent'
+ORDER BY started_at DESC
+LIMIT 10;
+
+-- Request details for a session
+SELECT * FROM events
+WHERE session_id = 'a3f8c2d1'
+ORDER BY timestamp;
+
+-- Signal averages by classification
+SELECT
+  classification,
+  AVG(timing_score) as avg_timing,
+  AVG(enumeration_score) as avg_enum,
+  AVG(header_score) as avg_headers,
+  AVG(prompt_leak_score) as avg_prompt,
+  AVG(mcp_score) as avg_mcp
+FROM sessions
+GROUP BY classification;
+```
+
+## Working with Python
+
+Load Sundew data into pandas for analysis:
+
+```python
+import pandas as pd
+import sqlite3
+
+conn = sqlite3.connect("./data/sundew.db")
+
+sessions = pd.read_sql("SELECT * FROM sessions", conn)
+events = pd.read_sql("SELECT * FROM events", conn)
+
+# Classification distribution
+print(sessions["classification"].value_counts())
+
+# Average confidence by classification
+print(sessions.groupby("classification")["confidence"].mean())
+
+# Request patterns for AI agents
+agent_sessions = sessions[sessions["classification"] == "ai_agent"]
+agent_events = events[events["session_id"].isin(agent_sessions["id"])]
+print(agent_events["path"].value_counts().head(20))
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="MCP Client" icon="robot" href="/guides/mcp-client">
+    Query data using Claude or another AI assistant.
+  </Card>
+  <Card title="Research Findings" icon="flask" href="/research/findings">
+    What we've learned from analyzing AI agent behavior.
+  </Card>
+</CardGroup>

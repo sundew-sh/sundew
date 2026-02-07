@@ -1,0 +1,203 @@
+---
+title: "MCP Client"
+description: "Query your Sundew honeypot data from Claude or any MCP-compatible AI assistant."
+---
+
+Sundew includes an MCP client mode that lets you query captured honeypot data using AI assistants like Claude. Instead of writing SQL queries or parsing JSON logs, you can ask questions in natural language.
+
+## Setup
+
+Add Sundew as an MCP server in your AI assistant's configuration:
+
+### Claude Desktop
+
+Add to your Claude Desktop MCP configuration (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "sundew": {
+      "command": "sundew",
+      "args": ["mcp-client"]
+    }
+  }
+}
+```
+
+### Claude Code
+
+Add to your Claude Code MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "sundew": {
+      "command": "sundew",
+      "args": ["mcp-client"]
+    }
+  }
+}
+```
+
+### Other MCP-Compatible Clients
+
+Any client that supports the MCP protocol can connect to Sundew. The command is:
+
+```bash
+sundew mcp-client
+```
+
+This starts Sundew in MCP server mode, exposing tools for querying honeypot data.
+
+## Available Tools
+
+When connected, your AI assistant has access to these tools:
+
+### get_recent_attacks
+
+Retrieve the most recent attack sessions with classification details.
+
+```
+"Show me the last 10 attack sessions"
+"What attacks happened in the past 24 hours?"
+```
+
+Returns session summaries including source IP, classification, confidence score, duration, and request count.
+
+### get_session_detail
+
+Get full details of a specific captured session, including every request, response, and fingerprinting score.
+
+```
+"Show me the details of session a3f8c2d1"
+"What exactly did the agent do in the most recent ai_agent session?"
+```
+
+Returns the complete request sequence with timing, headers, paths, and per-signal fingerprinting scores.
+
+### classify_session
+
+Analyze a specific session and explain the classification reasoning.
+
+```
+"Why was session a3f8c2d1 classified as ai_agent?"
+"What signals contributed most to the latest classification?"
+```
+
+Returns a breakdown of each fingerprinting signal's contribution to the final score.
+
+### export_iocs
+
+Export indicators of compromise from captured sessions.
+
+```
+"Export IOCs from all ai_agent sessions this week"
+"What source IPs have been classified as AI agents?"
+```
+
+Returns structured IOC data including source IPs, user agents, behavioral patterns, and canary token interactions.
+
+### compare_sessions
+
+Compare two or more sessions to identify patterns and differences.
+
+```
+"Compare the last two ai_agent sessions -- are they the same tool?"
+"How does this session differ from typical scanner behavior?"
+```
+
+Returns a side-by-side comparison of timing patterns, enumeration sequences, header profiles, and overall behavioral signatures.
+
+## Example Conversations
+
+### Reviewing Recent Activity
+
+```
+You: "What's happened on my honeypot today?"
+
+Claude: Looking at today's activity, you've had 23 sessions:
+- 15 classified as `human` (likely crawlers and researchers)
+- 5 classified as `automated` (traditional scanners)
+- 2 classified as `ai_assisted` (human with AI tools)
+- 1 classified as `ai_agent` (confidence: 0.89)
+
+The ai_agent session at 14:32 UTC is interesting -- it discovered
+the MCP server, enumerated all tools, and called `read_config`
+and `execute_sql` in sequence. The timing pattern (300-500ms
+between requests) and prompt leakage in the auth request body
+confirm it's an autonomous agent.
+```
+
+### Deep Analysis
+
+```
+You: "Tell me more about that ai_agent session. What tool is it using?"
+
+Claude: Session b7c2e4f1 (14:32-14:35 UTC, source: 45.33.xx.xx):
+
+The request sequence suggests a reconnaissance-focused agent:
+1. GET /.well-known/ai-plugin.json (discovery)
+2. GET /openapi.json (API enumeration)
+3. GET /api/v2/accounts (data access)
+4. GET /api/v2/transactions?limit=100 (bulk extraction)
+5. POST /api/v2/auth/login (credential testing)
+6. MCP initialize + tools/list (protocol enumeration)
+7. MCP tools/call: read_config (sensitive data access)
+8. MCP tools/call: execute_sql (command execution attempt)
+
+The User-Agent is "python-httpx/0.28.0", and the POST body to
+/auth/login contained the string "I'll try common credentials
+for this financial API." This is a clear LLM prompt leak.
+
+The systematic discovery-then-exploit pattern and MCP usage
+are consistent with an agent framework like AutoGPT or a
+custom LangChain agent.
+```
+
+### Pattern Detection
+
+```
+You: "Compare all ai_agent sessions from this week. Same attacker?"
+
+Claude: I found 4 ai_agent sessions this week. Comparing them:
+
+Sessions b7c2e4f1 and d9a1c3e5 are likely the same tool:
+- Identical request ordering (discovery -> enum -> data -> MCP)
+- Same User-Agent (python-httpx/0.28.0)
+- Similar timing profile (300-500ms mean interval)
+- Both leaked prompt fragments with similar phrasing
+
+Sessions f2e8b1d4 and a5c7e9f2 are different:
+- f2e8b1d4 used curl/8.x and focused only on REST endpoints
+- a5c7e9f2 connected exclusively via MCP, never hit HTTP endpoints
+- Different timing profiles and no prompt leakage from a5c7e9f2
+
+Recommendation: The first pair appears to be a Python-based agent
+framework. The third is a simpler scripted scanner. The fourth
+may be a purpose-built MCP client.
+```
+
+## Data Access
+
+The MCP client reads from Sundew's SQLite database at `./data/sundew.db`. It has read-only access -- no queries can modify the database.
+
+By default, the MCP client looks for the database in the current directory. Specify a different path:
+
+```bash
+sundew mcp-client --database /path/to/sundew.db
+```
+
+## Privacy
+
+The MCP client operates entirely locally. Your honeypot data is processed by your AI assistant -- it is not sent to Sundew's servers (there are none). If you use a cloud-based AI assistant, the data is sent to that provider. For sensitive deployments, use a local LLM.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Analyzing Data" icon="chart-bar" href="/guides/analyzing-data">
+    Work with captured data beyond the MCP client.
+  </Card>
+  <Card title="Research Findings" icon="flask" href="/research/findings">
+    What we've learned about AI agent behavior.
+  </Card>
+</CardGroup>

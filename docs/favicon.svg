@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50" fill="none">
+  <g transform="translate(0, 0)">
+    <!-- Main stem -->
+    <path d="M25 48 Q25 28 20 15 Q18 8 25 5" stroke="#16A34A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <!-- Left tendril -->
+    <path d="M22 20 Q12 14 8 10" stroke="#16A34A" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <circle cx="7" cy="9" r="4" fill="#16A34A" opacity="0.85"/>
+    <circle cx="7" cy="9" r="6" fill="#16A34A" opacity="0.15"/>
+    <!-- Right tendril -->
+    <path d="M24 25 Q34 18 38 14" stroke="#16A34A" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <circle cx="39" cy="13" r="4" fill="#16A34A" opacity="0.85"/>
+    <circle cx="39" cy="13" r="6" fill="#16A34A" opacity="0.15"/>
+    <!-- Top tendril -->
+    <path d="M24 12 Q28 6 33 3" stroke="#16A34A" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <circle cx="34" cy="2" r="3" fill="#16A34A" opacity="0.85"/>
+    <circle cx="34" cy="2" r="4.5" fill="#16A34A" opacity="0.15"/>
+    <!-- Small left tendril -->
+    <path d="M23 32 Q16 28 12 26" stroke="#16A34A" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <circle cx="11" cy="25" r="3" fill="#16A34A" opacity="0.85"/>
+    <circle cx="11" cy="25" r="4.5" fill="#16A34A" opacity="0.15"/>
+    <!-- Small right tendril -->
+    <path d="M26 35 Q33 32 37 30" stroke="#16A34A" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <circle cx="38" cy="29" r="3" fill="#16A34A" opacity="0.85"/>
+    <circle cx="38" cy="29" r="4.5" fill="#16A34A" opacity="0.15"/>
+  </g>
+</svg>

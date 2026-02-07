@@ -1,0 +1,145 @@
+---
+title: "Research Methodology"
+description: "How Sundew's detection capabilities are validated and how findings are produced."
+---
+
+This page describes the methodology behind Sundew's research findings. Transparency in method is essential for any security research tool.
+
+## Validation Approach
+
+Sundew's detection capabilities are validated through three methods:
+
+1. **Simulated traffic with known ground truth** -- controlled experiments where the visitor type is known
+2. **Cross-persona comparison** -- verifying that deployments are not fingerprinted
+3. **Live deployment observation** -- real-world data from deployed honeypots
+
+### Simulated Traffic
+
+The built-in traffic simulator (`tests/simulate/`) generates realistic traffic for four visitor profiles:
+
+| Profile | Behavior | Expected classification |
+|---------|----------|----------------------|
+| `naive_scanner` | Fast sequential endpoint enumeration, fixed timing, scanner headers | `automated` |
+| `ai_recon_agent` | Discovery-then-target pattern, variable timing, prompt leakage | `ai_agent` |
+| `mcp_agent` | MCP-only interaction, tool enumeration and execution | `ai_agent` |
+| `human_researcher` | Random exploration, long pauses, browser headers | `human` |
+
+Each profile is designed to produce characteristic behavioral patterns. The simulator is not used during normal operation -- it exists solely for validation and benchmarking.
+
+### Benchmarking Protocol
+
+1. Deploy Sundew with a random persona
+2. Run each simulator profile 100 times against the deployment
+3. Record the classification for each run
+4. Compute per-profile accuracy, precision, recall, and F1
+5. Repeat with 10 different personas to verify persona independence
+
+This produces a confusion matrix showing how well Sundew classifies each visitor type.
+
+### Cross-Persona Validation
+
+To verify anti-fingerprinting effectiveness:
+
+1. Generate 10 random personas (different industries, frameworks, data themes)
+2. Start Sundew with each persona sequentially
+3. For each deployment, record all observable outputs:
+   - Response bodies from every endpoint
+   - HTTP response headers
+   - API documentation content
+   - MCP tool names and descriptions
+   - Error responses for invalid requests
+   - Timing profiles
+4. Compare all output pairs across deployments
+5. Flag any shared strings, patterns, or structural similarities
+
+**Pass criteria**: No two deployments share response body content, endpoint paths (beyond standard discovery files), MCP tool names, or error message text.
+
+### Live Deployment
+
+For real-world validation, Sundew is deployed on accessible infrastructure:
+
+- Persona is generated randomly
+- Deployment runs for a defined period (minimum 7 days)
+- All sessions are captured and stored
+- Sessions are manually reviewed by researchers for ground truth labeling
+- Labeled data is compared against Sundew's automated classifications
+
+Manual labeling uses the request sequence, timing profile, and header analysis to independently classify each session. This provides a human-judged ground truth to compare against Sundew's automated classifications.
+
+## Statistical Rigor
+
+### Sample Sizes
+
+All reported metrics use a minimum of 100 samples per category. When sample sizes are smaller (e.g., for rare `ai_agent` sessions in live deployments), confidence intervals are reported alongside point estimates.
+
+### Confidence Intervals
+
+Classification accuracy is reported with 95% confidence intervals computed via bootstrap resampling.
+
+### Avoiding Overfitting
+
+Sundew's fingerprinting weights are not tuned on the same data used for reporting. The simulator profiles are intentionally simple -- they do not attempt to replicate every possible AI agent behavior. This means reported accuracy on simulated data is likely lower than real-world accuracy (simulators are easier to classify than sophisticated real agents).
+
+## Threat Model for the Research
+
+### What Could Bias Results
+
+**Simulator fidelity** -- If the simulator profiles do not accurately represent real AI agents, benchmarks may be misleading. Mitigation: supplement with live deployment data and update profiles as real agent behavior is observed.
+
+**Persona quality** -- If generated personas are not sufficiently varied, cross-persona validation may pass even though real-world detection is possible. Mitigation: test with many personas, include manual review, and run the "Google test" (can someone who has read the code detect a deployment?).
+
+**Selection bias in live data** -- Live deployments only see traffic that finds them. Agents that discover and immediately avoid the honeypot are invisible. Mitigation: acknowledge this limitation; the absence of evidence is not evidence of absence.
+
+### Ethical Considerations
+
+**Deception scope** -- Sundew deceives visitors into believing they are interacting with a real service. This is standard practice for honeypots and is legal on your own infrastructure. Sundew does not:
+- Entrap anyone (it waits passively)
+- Execute attacker-supplied code
+- Access any external systems
+- Collect data beyond what visitors voluntarily send
+
+**Data handling** -- Captured data may contain source IPs and behavioral patterns. The `--anonymize` export flag strips identifying information. Published datasets use anonymized data only.
+
+**Canary tokens** -- Fake credentials and API keys embedded in responses use reserved formats (RFC 5737 IP ranges, `.example.com` domains) that cannot be mistaken for real credentials.
+
+## Reproducibility
+
+All findings are reproducible. To replicate the benchmarks:
+
+```bash
+git clone https://github.com/sundew-sh/sundew.git
+cd sundew
+
+# Run the full benchmark suite
+make benchmark
+
+# This runs:
+# 1. Generate 10 random personas
+# 2. Run all simulator profiles against each
+# 3. Compute classification accuracy
+# 4. Run cross-persona comparison
+# 5. Output results to ./data/benchmark-results.json
+```
+
+The random seed for persona generation is recorded in the benchmark output, allowing exact reproduction.
+
+## Publishing Findings
+
+Findings are published in three formats:
+
+1. **This documentation** -- updated with each release
+2. **sundew-data repository** -- anonymized datasets with analysis notebooks
+3. **Academic papers** -- for significant findings, with full methodology and peer review
+
+Community contributions of anonymized deployment data are welcome and credited.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Findings" icon="chart-line" href="/research/findings">
+    Current research findings from Sundew deployments.
+  </Card>
+  <Card title="Contributing" icon="code" href="/contributing">
+    How to contribute findings and improvements.
+  </Card>
+</CardGroup>

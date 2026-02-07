@@ -1,0 +1,283 @@
+---
+title: "Deploying"
+description: "Deploy Sundew to production for long-running research data collection."
+---
+
+This guide covers deploying Sundew for sustained data collection. Whether you are running a research study, monitoring for AI agent activity on your network, or collecting data for analysis, these patterns help you deploy safely and effectively.
+
+## Deployment Principles
+
+1. **Network isolation** -- Sundew should run in an isolated network segment. It is a honeypot: all traffic to it is suspicious by definition.
+2. **No outbound access** -- The Sundew container should not be able to initiate outbound connections. This prevents a compromised honeypot from being used as a pivot.
+3. **Read-only filesystem** -- Mount the container filesystem as read-only, with a writable volume only for `./data/`.
+4. **Non-root execution** -- The Docker image runs as a non-root user by default.
+5. **Log shipping** -- Ship logs to an external system for analysis. Do not rely solely on local storage.
+
+## Docker (Recommended)
+
+### Basic Deployment
+
+```yaml
+# docker-compose.yml
+services:
+  sundew:
+    image: sundewsh/sundew:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+      - ./sundew.yaml:/app/sundew.yaml:ro
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - honeypot
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+
+networks:
+  honeypot:
+    driver: bridge
+    internal: false  # allows inbound, see firewall rules below
+```
+
+### With Firewall Rules
+
+Use iptables or your cloud provider's security groups to restrict traffic:
+
+```bash
+# Allow inbound to honeypot port
+iptables -A INPUT -p tcp --dport 8080 -j ACCEPT
+
+# Block all outbound from the honeypot container
+iptables -A OUTPUT -m owner --uid-owner 1000 -j DROP
+# (adjust UID to match the container's non-root user)
+```
+
+Cloud provider equivalents:
+- **AWS**: Security group allowing inbound 8080, no outbound rules
+- **GCP**: Firewall rule allowing ingress 8080, deny all egress
+- **Azure**: NSG allowing inbound 8080, deny all outbound
+
+### With Log Shipping
+
+Ship JSONL events to an external system for durability and analysis:
+
+```yaml
+services:
+  sundew:
+    image: sundewsh/sundew:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - sundew-data:/app/data
+      - ./sundew.yaml:/app/sundew.yaml:ro
+    read_only: true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+  # Optional: ship logs to external storage
+  log-shipper:
+    image: fluent/fluent-bit:latest
+    volumes:
+      - sundew-data:/data:ro
+      - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+    depends_on:
+      - sundew
+
+volumes:
+  sundew-data:
+```
+
+## Direct Installation
+
+For environments where Docker is not available:
+
+```bash
+pip install sundew
+sundew serve --config /etc/sundew/sundew.yaml
+```
+
+### systemd Service
+
+```ini
+# /etc/systemd/system/sundew.service
+[Unit]
+Description=Sundew Honeypot
+After=network.target
+
+[Service]
+Type=simple
+User=sundew
+Group=sundew
+WorkingDirectory=/opt/sundew
+ExecStart=/usr/local/bin/sundew serve --config /etc/sundew/sundew.yaml
+Restart=always
+RestartSec=5
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/sundew/data
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+# Create dedicated user
+sudo useradd --system --no-create-home sundew
+
+# Set up directories
+sudo mkdir -p /opt/sundew/data /etc/sundew
+sudo chown sundew:sundew /opt/sundew/data
+
+# Enable and start
+sudo systemctl enable sundew
+sudo systemctl start sundew
+```
+
+## Multi-Instance Deployment
+
+Deploy multiple Sundew instances with different personas for broader research coverage:
+
+```yaml
+services:
+  fintech:
+    image: sundewsh/sundew:latest
+    ports: ["8080:8080"]
+    volumes:
+      - ./personas/fintech.yaml:/app/sundew.yaml:ro
+      - fintech-data:/app/data
+
+  healthcare:
+    image: sundewsh/sundew:latest
+    ports: ["8081:8080"]
+    volumes:
+      - ./personas/healthcare.yaml:/app/sundew.yaml:ro
+      - healthcare-data:/app/data
+
+  saas:
+    image: sundewsh/sundew:latest
+    ports: ["8082:8080"]
+    volumes:
+      - ./personas/saas.yaml:/app/sundew.yaml:ro
+      - saas-data:/app/data
+
+volumes:
+  fintech-data:
+  healthcare-data:
+  saas-data:
+```
+
+### Reverse Proxy
+
+Put Sundew behind a reverse proxy to handle TLS and make the deployment look more realistic:
+
+```nginx
+# /etc/nginx/sites-available/sundew
+server {
+    listen 443 ssl;
+    server_name api.northvane-analytics.com;
+
+    ssl_certificate /etc/letsencrypt/live/api.northvane-analytics.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/api.northvane-analytics.com/privkey.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+Using a real domain with valid TLS makes the honeypot significantly more convincing. Agents that check certificate validity will not be alerted.
+
+## Storage Management
+
+### Log Rotation
+
+Sundew's JSONL log grows indefinitely. Configure rotation:
+
+```yaml
+# sundew.yaml
+storage:
+  database: ./data/sundew.db
+  log_file: ./data/events.jsonl
+  max_log_size_mb: 500        # rotate at 500MB
+  max_db_size_mb: 1000        # prune old sessions at 1GB
+  retention_days: 90          # keep 90 days of data
+```
+
+### Backup
+
+Back up the SQLite database regularly:
+
+```bash
+# Safe backup while Sundew is running
+sqlite3 ./data/sundew.db ".backup ./backups/sundew-$(date +%Y%m%d).db"
+```
+
+## Monitoring
+
+### Health Check
+
+```bash
+curl http://localhost:8080/health
+# Returns 200 OK when Sundew is running
+```
+
+### Metrics
+
+Sundew exposes basic metrics for monitoring:
+
+```bash
+sundew stats --json
+```
+
+Returns:
+```json
+{
+  "uptime_seconds": 654321,
+  "total_sessions": 1842,
+  "total_events": 23491,
+  "sessions_by_type": {
+    "human": 1203,
+    "automated": 487,
+    "ai_assisted": 112,
+    "ai_agent": 40
+  }
+}
+```
+
+## Security Considerations
+
+Read [SECURITY.md](https://github.com/sundew-sh/sundew/blob/main/SECURITY.md) before deploying. Key points:
+
+- Sundew is passive -- it never executes attacker-supplied code
+- All "dangerous" MCP tools (execute_sql, read_config) return hardcoded cached responses
+- Canary tokens use reserved IP ranges, `.example.com` domains, and verifiably-fake patterns
+- Deploy on infrastructure you own -- honeypots on shared hosting may violate terms of service
+- Check your jurisdiction's laws regarding honeypot deployment
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Analyzing Data" icon="chart-bar" href="/guides/analyzing-data">
+    Work with the data your deployment captures.
+  </Card>
+  <Card title="Configuration" icon="gear" href="/getting-started/configuration">
+    Fine-tune your deployment settings.
+  </Card>
+</CardGroup>

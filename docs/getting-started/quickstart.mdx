@@ -1,0 +1,147 @@
+---
+title: "Quickstart"
+description: "Go from zero to catching your first AI agent in 5 minutes."
+---
+
+## Prerequisites
+
+You need one of the following:
+
+- **Docker** (recommended) -- no other dependencies required
+- **Python 3.11+** -- for pip installation or running from source
+
+## Step 1: Start Sundew
+
+<Tabs>
+  <Tab title="Docker">
+    ```bash
+    git clone https://github.com/sundew-sh/sundew.git
+    cd sundew
+    docker compose up
+    ```
+  </Tab>
+  <Tab title="pip">
+    ```bash
+    pip install sundew
+    sundew serve
+    ```
+  </Tab>
+  <Tab title="From source">
+    ```bash
+    git clone https://github.com/sundew-sh/sundew.git
+    cd sundew
+    make run
+    ```
+  </Tab>
+</Tabs>
+
+Sundew generates a unique persona on first run and starts listening:
+
+```
+INFO   Sundew v0.1.0 starting...
+INFO   Persona loaded: Northvane Analytics (fintech)
+INFO   Endpoints: /api/v2/transactions, /api/v2/accounts, /api/v2/customers
+INFO   MCP server active: query_transactions, get_customer_profile, read_config
+INFO   Listening on 0.0.0.0:8080
+```
+
+Every deployment gets a different persona. Your instance might be a healthcare platform, a SaaS product, or an e-commerce API. This is by design.
+
+## Step 2: Explore Your Deployment
+
+Open a second terminal and see what your honeypot looks like to an AI agent:
+
+```bash
+# Discover the API
+curl http://localhost:8080/.well-known/ai-plugin.json
+
+# Read the OpenAPI spec
+curl http://localhost:8080/openapi.json
+
+# Hit an endpoint
+curl http://localhost:8080/api/v2/transactions?limit=5
+```
+
+The responses will match your persona -- realistic data, appropriate headers, consistent naming conventions.
+
+## Step 3: See the Classification
+
+Back in the first terminal, you'll see Sundew logging and scoring each request:
+
+```
+12:04:31 GET  /.well-known/ai-plugin.json     src=127.0.0.1    signal=ai_discovery
+12:04:32 GET  /openapi.json                    src=127.0.0.1    signal=api_enum
+12:04:33 GET  /api/v2/transactions?limit=5     src=127.0.0.1    signal=data_access
+```
+
+Query the captured sessions:
+
+```bash
+sundew query --last-session
+```
+
+```
+Session: a3f8c2d1
+  Source:         127.0.0.1
+  Requests:       3
+  Duration:       2.1s
+  Classification: human (confidence: 0.22)
+  Signals:
+    timing:       0.15 (irregular intervals)
+    enumeration:  0.30 (partial path discovery)
+    headers:      0.20 (normal browser headers)
+    prompt_leak:  0.00 (no LLM artifacts)
+    mcp:          0.00 (no MCP connection)
+```
+
+Manual curl requests classify as `human` because your timing is irregular and you're not connecting via MCP.
+
+## Step 4: Simulate an AI Agent
+
+Run the built-in simulator to see how a real AI agent attack looks:
+
+```bash
+# In a third terminal
+sundew simulate --profile ai_recon_agent --target http://localhost:8080
+```
+
+Now check the logs:
+
+```
+SESSION CLASSIFIED: ai_agent (confidence: 0.91)
+  Timing:      0.85 (consistent 200-800ms intervals)
+  Enumeration: 0.92 (systematic path discovery)
+  Headers:     0.78 (missing Referer, bot-like UA)
+  MCP:         1.00 (connected via MCP protocol)
+  Prompt leak: 0.88 ("As an AI assistant" in POST body)
+```
+
+The simulator mimics the behavioral patterns of autonomous AI agents -- systematic discovery, consistent timing, MCP protocol usage, and LLM artifacts in request bodies.
+
+## Step 5: Try a Different Persona
+
+Generate a completely different deployment:
+
+```bash
+sundew generate --persona healthcare
+sundew serve --persona ./data/persona.yaml
+```
+
+Same Sundew, completely different identity. Different endpoints, different data, different headers. An agent that learned to recognize the fintech deployment has zero advantage here.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/getting-started/installation">
+    Detailed installation options including Ollama for LLM-powered personas.
+  </Card>
+  <Card title="Configuration" icon="gear" href="/getting-started/configuration">
+    Customize traps, personas, logging, and more via sundew.yaml.
+  </Card>
+  <Card title="How It Works" icon="diagram-project" href="/concepts/how-it-works">
+    Understand the architecture -- persona engine, traps, fingerprinting.
+  </Card>
+  <Card title="MCP Client" icon="robot" href="/guides/mcp-client">
+    Query your honeypot data from Claude or any MCP-compatible AI.
+  </Card>
+</CardGroup>
