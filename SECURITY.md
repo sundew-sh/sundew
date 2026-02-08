@@ -163,7 +163,7 @@ The following are in scope:
 
 ### Reporting
 
-1. **Email:** security@sundew-honeypot.example.com
+1. **Email:** contact@sundew.sh
 2. **Subject line:** `[SUNDEW-SECURITY]` followed by a brief description.
 3. **Include:** Steps to reproduce, affected version, impact assessment.
 4. **Do NOT** file a public GitHub issue for security vulnerabilities.
