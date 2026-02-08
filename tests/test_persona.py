@@ -1,4 +1,4 @@
-"""Tests for persona variation — verifies that different personas produce unique outputs.
+"""Tests for persona variation -verifies that different personas produce unique outputs.
 
 Generates 10 personas and verifies that no two share identical response bodies,
 endpoint paths, response headers, or timing configurations.

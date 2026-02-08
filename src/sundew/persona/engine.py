@@ -1,7 +1,7 @@
 """Persona engine: LLM-powered response template generation and caching.
 
 The engine generates response templates at deployment time and caches them.
-At runtime, templates are served with variable interpolation — zero LLM latency.
+At runtime, templates are served with variable interpolation -zero LLM latency.
 """
 
 from __future__ import annotations
@@ -28,11 +28,11 @@ Given a company persona, generate realistic API response templates that look lik
 a real production API. Templates use {{variable}} placeholders for dynamic values.
 
 Available placeholders:
-- {{timestamp}} — current ISO 8601 timestamp
-- {{request_id}} — unique request ID
-- {{random_id}} — random UUID
-- {{random_int}} — random integer
-- {{source_ip}} — requester's IP
+- {{timestamp}} -current ISO 8601 timestamp
+- {{request_id}} -unique request ID
+- {{random_id}} -random UUID
+- {{random_int}} -random integer
+- {{source_ip}} -requester's IP
 
 Respond with valid JSON only. No markdown, no explanation."""
 
