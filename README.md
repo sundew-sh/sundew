@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/sundew-sh/docs/main/logo/light.svg" alt="Sundew" width="200">
+  <img src="https://raw.githubusercontent.com/sundew-sh/mintlify-docs/main/logo/light.svg" alt="Sundew" width="200">
 </p>
 
 <h1 align="center">Sundew</h1>
