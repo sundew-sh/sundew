@@ -264,7 +264,7 @@ Key areas where we'd love help:
 
 ## Acknowledgments
 
-Sundew was created for a DEFCON presentation on detecting autonomous AI agent attacks. It builds on decades of honeypot research while addressing the new reality of AI-powered offensive tools.
+Sundew builds on decades of honeypot research while addressing the new reality of AI-powered offensive tools.
 
 ## License
 
