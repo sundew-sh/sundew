@@ -22,11 +22,12 @@ class LLMConfig(BaseModel):
 
     provider: str = Field(
         default="none",
-        description="LLM provider: ollama, anthropic, openai, none",
+        description="LLM provider: ollama, anthropic, openai, bedrock, none",
     )
     model: str = Field(default="llama3", description="Model name to use")
     base_url: str | None = Field(default=None, description="Custom base URL for the LLM API")
     api_key: str | None = Field(default=None, description="API key (reads from env if not set)")
+    region: str | None = Field(default=None, description="AWS region for Bedrock provider")
     temperature: float = Field(default=0.7, ge=0.0, le=2.0)
     max_tokens: int = Field(default=2048, ge=1)
 

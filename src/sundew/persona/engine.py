@@ -114,6 +114,8 @@ class PersonaEngine:
             await self._generate_with_anthropic()
         elif provider == "openai":
             await self._generate_with_openai()
+        elif provider == "bedrock":
+            await self._generate_with_bedrock()
         else:
             logger.warning("Unknown LLM provider '%s', falling back to packs", provider)
             await self._load_from_packs()
@@ -371,20 +373,83 @@ class PersonaEngine:
             logger.warning("OpenAI generation failed: %s, falling back to packs", exc)
             await self._load_from_packs()
 
+    async def _generate_with_bedrock(self) -> None:
+        """Generate response templates using AWS Bedrock."""
+        try:
+            import boto3
+        except ImportError:
+            logger.warning("boto3 package not installed, falling back to packs")
+            await self._load_from_packs()
+            return
+
+        import os
+
+        prompt = _build_generation_prompt(self.persona)
+        region = (
+            self.llm_config.region
+            or os.environ.get("AWS_DEFAULT_REGION")
+            or os.environ.get("AWS_REGION")
+            or "us-east-1"
+        )
+        model_id = self.llm_config.model
+
+        try:
+            client = boto3.client("bedrock-runtime", region_name=region)
+            response = client.converse(
+                modelId=model_id,
+                messages=[{"role": "user", "content": [{"text": prompt}]}],
+                system=[{"text": SYSTEM_PROMPT}],
+                inferenceConfig={
+                    "temperature": self.llm_config.temperature,
+                    "maxTokens": self.llm_config.max_tokens,
+                },
+            )
+            text = response["output"]["message"]["content"][0]["text"]
+            self._parse_llm_response(text)
+
+        except Exception as exc:
+            logger.warning("Bedrock generation failed: %s, falling back to packs", exc)
+            await self._load_from_packs()
+
     def _parse_llm_response(self, text: str) -> None:
         """Parse LLM output into response templates.
+
+        Handles common LLM quirks: markdown fences, trailing commas,
+        unquoted placeholders, wrapped objects, and nested body_template.
 
         Args:
             text: Raw LLM response text expected to be a JSON array.
         """
+        import re
+
         text = text.strip()
         if text.startswith("```"):
             lines = text.split("\n")
             text = "\n".join(lines[1:-1])
 
+        # Strip trailing commas before ] or } (common LLM quirk)
+        text = re.sub(r",\s*([}\]])", r"\1", text)
+        # Quote unquoted placeholders like {{random_int}} used as bare values
+        text = re.sub(r":\s*(\{\{[^}]+\}\})", r': "\1"', text)
+
         try:
-            raw: list[dict[str, Any]] = json.loads(text)
+            parsed: Any = json.loads(text)
+
+            # Unwrap if LLM returned {"templates": [...]} instead of [...]
+            if isinstance(parsed, dict):
+                for key in ("templates", "data", "responses"):
+                    if key in parsed and isinstance(parsed[key], list):
+                        parsed = parsed[key]
+                        break
+
+            if not isinstance(parsed, list):
+                raise ValueError("Expected a JSON array of templates")
+
+            raw: list[dict[str, Any]] = parsed
             for item in raw:
+                # If body_template is a dict/list, stringify it
+                if isinstance(item.get("body_template"), (dict, list)):
+                    item["body_template"] = json.dumps(item["body_template"])
                 template = ResponseTemplate.model_validate(item)
                 self.register_template(template)
         except (json.JSONDecodeError, ValueError) as exc:

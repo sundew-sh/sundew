@@ -272,17 +272,16 @@ SECRET_PATTERNS = [
 class TestNoSecrets:
     """Verify no real secrets appear in source, config, or defaults."""
 
+    _EXCLUDE_DIRS = {".venv", "node_modules", ".git", "__pycache__", ".tox", ".mypy_cache"}
+
     def _files_to_scan(self) -> Iterator[Path]:
-        """All files that could contain secrets."""
-        yield from _python_files()
-        yield from PROJECT_ROOT.rglob("*.yaml")
-        yield from PROJECT_ROOT.rglob("*.yml")
-        yield from PROJECT_ROOT.rglob("*.toml")
-        yield from PROJECT_ROOT.rglob("*.json")
-        yield from PROJECT_ROOT.rglob("*.env")
-        yield from PROJECT_ROOT.rglob("*.env.*")
-        # Also check Dockerfiles
-        yield from PROJECT_ROOT.rglob("Dockerfile*")
+        """All files that could contain secrets (excludes virtual environments)."""
+        for pattern in (
+            "*.py", "*.yaml", "*.yml", "*.toml", "*.json", "*.env", "*.env.*", "Dockerfile*",
+        ):
+            for p in PROJECT_ROOT.rglob(pattern):
+                if not any(excluded in p.parts for excluded in self._EXCLUDE_DIRS):
+                    yield p
 
     def test_no_real_secrets_in_source(self) -> None:
         violations: list[str] = []

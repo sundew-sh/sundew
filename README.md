@@ -215,7 +215,7 @@ traps:
 persona: auto  # or path to custom persona.yaml
 
 llm:
-  provider: ollama  # ollama, anthropic, openai, none
+  provider: ollama  # ollama, anthropic, openai, bedrock, none
   model: llama3
 
 server:
