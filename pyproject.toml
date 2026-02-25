@@ -84,4 +84,4 @@ strict = true
 
 [tool.bandit]
 exclude_dirs = ["tests"]
-skips = ["B101"]  # assert is fine in production for invariant checks
+skips = ["B101", "B104", "B311"]  # B101: assert ok for invariants, B104: honeypot binds all interfaces intentionally, B311: random ok for non-crypto use
