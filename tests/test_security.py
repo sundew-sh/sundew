@@ -277,7 +277,14 @@ class TestNoSecrets:
     def _files_to_scan(self) -> Iterator[Path]:
         """All files that could contain secrets (excludes virtual environments)."""
         for pattern in (
-            "*.py", "*.yaml", "*.yml", "*.toml", "*.json", "*.env", "*.env.*", "Dockerfile*",
+            "*.py",
+            "*.yaml",
+            "*.yml",
+            "*.toml",
+            "*.json",
+            "*.env",
+            "*.env.*",
+            "Dockerfile*",
         ):
             for p in PROJECT_ROOT.rglob(pattern):
                 if not any(excluded in p.parts for excluded in self._EXCLUDE_DIRS):
