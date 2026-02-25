@@ -13,11 +13,13 @@ import asyncio
 import json
 import sys
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from tests.simulate.base import SimulationResult  # noqa: TC001
 from tests.simulate.profiles import PROFILE_REGISTRY
 from tests.simulate.profiles.config import PROFILE_CONFIGS
+
+if TYPE_CHECKING:
+    from tests.simulate.base import SimulationResult
 
 
 def format_result(result: SimulationResult) -> dict[str, Any]:

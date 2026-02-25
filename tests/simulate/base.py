@@ -6,11 +6,12 @@ import abc
 import asyncio
 import time
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import httpx
 
-from tests.simulate.timing import TimingStrategy  # noqa: TC001
+if TYPE_CHECKING:
+    from tests.simulate.timing import TimingStrategy
 
 
 @dataclass

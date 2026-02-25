@@ -7,7 +7,6 @@ profile generation) without needing a running Sundew instance.
 from __future__ import annotations
 
 import pytest
-
 from tests.simulate.base import SimulatedRequest, SimulationResult
 from tests.simulate.headers import (
     ai_agent_headers,
