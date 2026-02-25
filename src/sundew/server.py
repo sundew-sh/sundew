@@ -151,7 +151,7 @@ class SundewServer:
             The response from the handler.
         """
         start_time = time.monotonic()
-        response: Response = await call_next(request)  # type: ignore[call-arg]
+        response: Response = await call_next(request)  # type: ignore[call-arg,operator]
         elapsed_ms = int((time.monotonic() - start_time) * 1000)
 
         if self.persona:
