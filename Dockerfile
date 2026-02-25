@@ -1,4 +1,4 @@
-FROM dhi.io/python:3.13-alpine3.21-dev AS builder
+FROM dhi.io/python:3.13-dev AS builder
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ RUN /app/venv/bin/pip install --no-cache-dir . && \
     mkdir -p /app/data && chown 65532:65532 /app/data
 
 
-FROM dhi.io/python:3.13-alpine3.21
+FROM dhi.io/python:3.13
 
 WORKDIR /app
 
