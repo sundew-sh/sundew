@@ -1,25 +1,26 @@
-FROM dhi.io/python:3.13-dev AS builder
+FROM python:3.13-alpine AS builder
 
 WORKDIR /app
-
-RUN python -m venv /app/venv
 
 COPY pyproject.toml README.md ./
 COPY src/ src/
 
-RUN /app/venv/bin/pip install --no-cache-dir . && \
-    mkdir -p /app/data && chown 65532:65532 /app/data
+RUN pip install --no-cache-dir --prefix=/install .
 
 
-FROM dhi.io/python:3.13
+FROM python:3.13-alpine
+
+RUN addgroup -g 65532 sundew && \
+    adduser -u 65532 -G sundew -s /bin/false -D sundew
+
+COPY --from=builder /install /usr/local
+COPY sundew.yaml /app/sundew.yaml
 
 WORKDIR /app
 
-ENV PATH="/app/venv/bin:$PATH"
+RUN mkdir -p /app/data && chown sundew:sundew /app/data
 
-COPY --from=builder /app/venv /app/venv
-COPY --from=builder --chown=65532:65532 /app/data /app/data
-COPY sundew.yaml /app/sundew.yaml
+USER sundew
 
 EXPOSE 8080
 
