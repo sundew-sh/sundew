@@ -10,8 +10,8 @@
 
 <p align="center">
   <a href="https://github.com/sundew-sh/sundew/actions"><img src="https://img.shields.io/github/actions/workflow/status/sundew-sh/sundew/ci.yml?branch=main&style=flat-square" alt="CI"></a>
-  <a href="https://pypi.org/project/sundew/"><img src="https://img.shields.io/pypi/v/sundew?style=flat-square&color=16A34A" alt="PyPI"></a>
-  <a href="https://hub.docker.com/r/sundewsh/sundew"><img src="https://img.shields.io/docker/v/sundewsh/sundew?style=flat-square&label=docker&color=16A34A" alt="Docker"></a>
+  <a href="https://pypi.org/project/sundewsh/"><img src="https://img.shields.io/pypi/v/sundewsh?style=flat-square&color=16A34A" alt="PyPI"></a>
+  <a href="https://hub.docker.com/r/karpie28/sundew"><img src="https://img.shields.io/docker/v/karpie28/sundew?style=flat-square&label=docker&color=16A34A" alt="Docker"></a>
   <a href="https://github.com/sundew-sh/sundew/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="License"></a>
   <a href="https://docs.sundew.sh"><img src="https://img.shields.io/badge/docs-docs.sundew.sh-16A34A?style=flat-square" alt="Docs"></a>
 </p>
@@ -56,7 +56,7 @@ docker compose up
 **pip:**
 
 ```bash
-pip install sundew
+pip install sundewsh
 sundew serve
 ```
 
