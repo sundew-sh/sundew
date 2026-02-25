@@ -126,11 +126,11 @@ async def run_mcp_server(config: SundewConfig) -> None:
     storage = StorageBackend(db_path=config.storage.database)
     server = Server("sundew-research")
 
-    @server.list_tools()  # type: ignore[misc]
+    @server.list_tools()  # type: ignore[no-untyped-call,untyped-decorator]
     async def list_tools() -> list[Tool]:
         return TOOLS
 
-    @server.call_tool()  # type: ignore[misc]
+    @server.call_tool()  # type: ignore[untyped-decorator]
     async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
         if name == "get_recent_attacks":
             return _handle_get_recent_attacks(storage, arguments)

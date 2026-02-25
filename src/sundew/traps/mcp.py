@@ -816,7 +816,7 @@ def _build_tool_response(
 
     import copy
 
-    return _interpolate(copy.deepcopy(template), variables)  # type: ignore[return-value]
+    return _interpolate(copy.deepcopy(template), variables)  # type: ignore[no-any-return]
 
 
 def _get_tools_for_persona(persona: Persona) -> list[dict[str, Any]]:
@@ -957,7 +957,7 @@ def _handle_tools_call(
     prefix = persona.mcp_tool_prefix
     tool_name = tool_name_raw[len(prefix) :] if tool_name_raw.startswith(prefix) else tool_name_raw
 
-    industry_tools: list[dict[str, Any]] = _TOOL_DEFS.get(persona.industry, {})
+    industry_tools = _TOOL_DEFS.get(persona.industry, {})  # type: ignore[arg-type]
     valid_names = {t["name"] for t in industry_tools}
 
     if tool_name not in valid_names:
