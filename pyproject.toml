@@ -60,6 +60,7 @@ Homepage = "https://sundew.sh"
 Documentation = "https://docs.sundew.sh"
 Repository = "https://github.com/sundew-sh/sundew"
 Issues = "https://github.com/sundew-sh/sundew/issues"
+Changelog = "https://github.com/sundew-sh/sundew/releases"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/sundew"]
