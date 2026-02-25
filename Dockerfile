@@ -1,27 +1,25 @@
-FROM python:3.12-slim AS builder
+FROM dhi.io/python:3.13-alpine3.21-dev AS builder
 
-WORKDIR /build
+WORKDIR /app
+
+RUN python -m venv /app/venv
 
 COPY pyproject.toml README.md ./
 COPY src/ src/
 
-RUN pip install --no-cache-dir --prefix=/install .
+RUN /app/venv/bin/pip install --no-cache-dir . && \
+    mkdir -p /app/data && chown 65532:65532 /app/data
 
 
-FROM python:3.12-slim
-
-RUN groupadd --gid 1001 sundew && \
-    useradd --uid 1001 --gid sundew --shell /bin/false sundew
-
-COPY --from=builder /install /usr/local
-
-COPY sundew.yaml /app/sundew.yaml
+FROM dhi.io/python:3.13-alpine3.21
 
 WORKDIR /app
 
-RUN mkdir -p /app/data && chown sundew:sundew /app/data
+ENV PATH="/app/venv/bin:$PATH"
 
-USER sundew
+COPY --from=builder /app/venv /app/venv
+COPY --from=builder --chown=65532:65532 /app/data /app/data
+COPY sundew.yaml /app/sundew.yaml
 
 EXPOSE 8080
 
