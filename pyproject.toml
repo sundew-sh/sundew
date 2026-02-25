@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "sundew"
+name = "sundewsh"
 version = "0.1.0"
 description = "An open-source honeypot designed to detect and study autonomous AI agent attacks"
 readme = "README.md"
