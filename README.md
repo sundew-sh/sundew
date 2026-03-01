@@ -24,7 +24,7 @@ Named after the [sundew plant](https://en.wikipedia.org/wiki/Drosera) -- a carni
 
 <!-- TODO: Replace with actual asciinema recording
 Demo recording plan (90 seconds):
-  1. `docker compose up` -> Sundew starts, shows persona: "Northvane Analytics (fintech)"
+  1. `docker run -p 8080:8080 karpie28/sundew` -> Sundew starts, shows persona: "Northvane Analytics (fintech)"
   2. Split terminal: simulate AI agent discovering /.well-known/ai-plugin.json,
      reading /docs (OpenAPI), enumerating endpoints, connecting via MCP
   3. Sundew logs light up with real-time classification, confidence scores climbing
@@ -50,7 +50,7 @@ The core innovation is the **persona engine**. When an AI agent learns what one 
 **Docker (recommended):**
 
 ```bash
-docker compose up
+docker run -p 8080:8080 karpie28/sundew
 ```
 
 **pip:**
