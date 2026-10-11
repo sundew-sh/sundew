@@ -12,7 +12,7 @@ from rich.table import Table
 
 from sundew.config import load_config
 from sundew.models import AttackClassification
-from sundew.persona.generator import generate_persona, save_persona_to_yaml
+from sundew.persona.generator import INDUSTRIES, generate_persona, save_persona_to_yaml
 from sundew.storage import StorageBackend
 
 console = Console()
@@ -71,7 +71,8 @@ def serve(ctx: click.Context, host: str | None, port: int | None) -> None:
     "--industry",
     "-i",
     default=None,
-    help="Industry theme: fintech, saas, healthcare, etc.",
+    type=click.Choice(INDUSTRIES),
+    help="Industry theme (random from seed if omitted)",
 )
 @click.option("--seed", "-s", default=None, type=int, help="Deterministic seed for generation")
 @click.option("--output", "-o", default=None, help="Output file path (YAML)")
@@ -83,7 +84,7 @@ def generate(
     json_output: bool,
 ) -> None:
     """Generate a new deployment persona."""
-    persona = generate_persona(seed=seed)
+    persona = generate_persona(seed=seed, industry=industry)
 
     if output:
         path = save_persona_to_yaml(persona, output)

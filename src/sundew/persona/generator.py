@@ -129,7 +129,7 @@ MCP_TOOL_PREFIXES: dict[str, list[str]] = {
 }
 
 
-def generate_persona(seed: int | None = None) -> Persona:
+def generate_persona(seed: int | None = None, industry: str | None = None) -> Persona:
     """Generate a random but internally consistent persona.
 
     Uses a deterministic seed so the same seed always produces the same
@@ -137,16 +137,26 @@ def generate_persona(seed: int | None = None) -> Persona:
 
     Args:
         seed: Optional integer seed for reproducible generation.
+        industry: Optional industry override (one of INDUSTRIES). The seed
+            still determines all other fields.
 
     Returns:
         A fully populated Persona instance.
+
+    Raises:
+        ValueError: If industry is not a known industry.
     """
+    if industry is not None and industry not in INDUSTRIES:
+        raise ValueError(f"Unknown industry {industry!r}, expected one of {INDUSTRIES}")
+
     if seed is None:
         seed = random.randint(0, 2**31 - 1)
 
     rng = random.Random(seed)
 
-    industry = rng.choice(INDUSTRIES)
+    # Always draw so a seed keeps its company name with or without an override
+    seeded_industry = rng.choice(INDUSTRIES)
+    industry = industry or seeded_industry
     company_name = f"{rng.choice(COMPANY_PREFIXES)}{rng.choice(COMPANY_SUFFIXES)}"
     data_theme = rng.choice(DATA_THEMES[industry])
     endpoint_prefix = rng.choice(ENDPOINT_PREFIXES)
