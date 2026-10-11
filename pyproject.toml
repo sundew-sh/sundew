@@ -22,34 +22,35 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Security",
 ]
 dependencies = [
-    "fastapi>=0.115.0,<1.0.0",
-    "uvicorn[standard]>=0.32.0,<1.0.0",
-    "pydantic>=2.10.0,<3.0.0",
-    "pydantic-settings>=2.6.0,<3.0.0",
-    "pyyaml>=6.0.2,<7.0.0",
-    "click>=8.1.0,<9.0.0",
-    "httpx>=0.28.0,<1.0.0",
-    "rich>=13.9.0,<14.0.0",
-    "mcp>=1.0.0,<2.0.0",
+    "fastapi>=0.143.0,<1.0.0",
+    "uvicorn[standard]>=0.54.0,<1.0.0",
+    "pydantic>=2.14.0,<3.0.0",
+    "pydantic-settings>=2.15.0,<3.0.0",
+    "pyyaml>=6.0.3,<7.0.0",
+    "click>=8.5.0,<9.0.0",
+    "httpx>=0.28.1,<1.0.0",
+    "rich>=15.0.0,<16.0.0",
+    "mcp>=2.3.0,<3.0.0",
 ]
 
 [project.optional-dependencies]
-anthropic = ["anthropic>=0.40.0,<1.0.0"]
-openai = ["openai>=1.55.0,<2.0.0"]
-bedrock = ["boto3>=1.35.0,<2.0.0"]
-all = ["anthropic>=0.40.0,<1.0.0", "openai>=1.55.0,<2.0.0", "boto3>=1.35.0,<2.0.0"]
+anthropic = ["anthropic>=1.13.0,<2.0.0"]
+openai = ["openai>=3.29.0,<4.0.0"]
+bedrock = ["boto3>=1.43.0,<2.0.0"]
+all = ["anthropic>=1.13.0,<2.0.0", "openai>=3.29.0,<4.0.0", "boto3>=1.43.0,<2.0.0"]
 dev = [
-    "pytest>=8.3.0,<9.0.0",
-    "pytest-asyncio>=0.24.0,<1.0.0",
-    "pytest-cov>=6.0.0,<7.0.0",
-    "ruff>=0.8.0,<1.0.0",
-    "mypy>=1.13.0,<2.0.0",
-    "httpx>=0.28.0,<1.0.0",
-    "pip-audit>=2.7.0,<3.0.0",
-    "bandit>=1.7.0,<2.0.0",
+    "pytest>=9.1.0,<10.0.0",
+    "pytest-asyncio>=1.4.0,<2.0.0",
+    "pytest-cov>=7.1.0,<8.0.0",
+    "ruff>=0.17.0,<1.0.0",
+    "mypy>=2.4.0,<3.0.0",
+    "httpx>=0.28.1,<1.0.0",
+    "pip-audit>=2.10.0,<3.0.0",
+    "bandit>=1.9.0,<2.0.0",
 ]
 
 [project.scripts]

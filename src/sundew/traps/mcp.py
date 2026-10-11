@@ -957,7 +957,7 @@ def _handle_tools_call(
     prefix = persona.mcp_tool_prefix
     tool_name = tool_name_raw[len(prefix) :] if tool_name_raw.startswith(prefix) else tool_name_raw
 
-    industry_tools = _TOOL_DEFS.get(persona.industry, {})  # type: ignore[arg-type]
+    industry_tools = _TOOL_DEFS.get(persona.industry, [])
     valid_names = {t["name"] for t in industry_tools}
 
     if tool_name not in valid_names:

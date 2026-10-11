@@ -1,4 +1,4 @@
-FROM python:3.13-alpine AS builder
+FROM python:3.14-alpine AS builder
 
 WORKDIR /app
 
@@ -8,9 +8,13 @@ COPY src/ src/
 RUN pip install --no-cache-dir --prefix=/install .
 
 
-FROM python:3.13-alpine
+FROM python:3.14-alpine
 
-RUN addgroup -g 65532 sundew && \
+# Pull in Alpine security fixes released after the base image was published,
+# and drop pip: it is not needed at runtime and only adds attack surface.
+RUN apk upgrade --no-cache && \
+    pip uninstall -y pip && \
+    addgroup -g 65532 sundew && \
     adduser -u 65532 -G sundew -s /bin/false -D sundew
 
 COPY --from=builder /install /usr/local

@@ -173,7 +173,8 @@ def query(
 @click.pass_context
 def mcp_client(ctx: click.Context) -> None:
     """Start the MCP server for researcher access to honeypot data."""
-    console.print("[bold green]Starting Sundew MCP server...[/bold green]")
+    # stdout carries the MCP stdio transport, so status output goes to stderr
+    Console(stderr=True).print("[bold green]Starting Sundew MCP server...[/bold green]")
 
     import asyncio
 

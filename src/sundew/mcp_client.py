@@ -9,9 +9,17 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, Any
 
-from mcp.server import Server
+from mcp.server import Server, ServerRequestContext
 from mcp.server.stdio import stdio_server
-from mcp.types import TextContent, Tool
+from mcp.types import (
+    CallToolRequestParams,
+    CallToolResult,
+    ContentBlock,
+    ListToolsResult,
+    PaginatedRequestParams,
+    TextContent,
+    Tool,
+)
 
 from sundew.models import AttackClassification
 from sundew.storage import StorageBackend
@@ -23,7 +31,7 @@ TOOLS = [
     Tool(
         name="get_recent_attacks",
         description="Retrieve recent attack events captured by the honeypot",
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "limit": {
@@ -45,7 +53,7 @@ TOOLS = [
         description=(
             "Get detailed information about a specific attack session including all requests"
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "session_id": {
@@ -59,7 +67,7 @@ TOOLS = [
     Tool(
         name="classify_session",
         description="Manually classify a session as human, automated, ai_assisted, or ai_agent",
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "session_id": {
@@ -81,7 +89,7 @@ TOOLS = [
     Tool(
         name="export_iocs",
         description="Export indicators of compromise from captured sessions",
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "classification": {
@@ -99,7 +107,7 @@ TOOLS = [
     Tool(
         name="compare_sessions",
         description="Compare two sessions to identify behavioral similarities",
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "session_id_a": {
@@ -124,29 +132,51 @@ async def run_mcp_server(config: SundewConfig) -> None:
         config: Sundew configuration for storage access.
     """
     storage = StorageBackend(db_path=config.storage.database)
-    server = Server("sundew-research")
 
-    @server.list_tools()  # type: ignore[no-untyped-call,untyped-decorator]
-    async def list_tools() -> list[Tool]:
-        return TOOLS
+    async def list_tools(
+        ctx: ServerRequestContext[Any], params: PaginatedRequestParams | None
+    ) -> ListToolsResult:
+        return ListToolsResult(tools=TOOLS)
 
-    @server.call_tool()  # type: ignore[untyped-decorator]
-    async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
-        if name == "get_recent_attacks":
-            return _handle_get_recent_attacks(storage, arguments)
-        elif name == "get_session_detail":
-            return _handle_get_session_detail(storage, arguments)
-        elif name == "classify_session":
-            return _handle_classify_session(storage, arguments)
-        elif name == "export_iocs":
-            return _handle_export_iocs(storage, arguments)
-        elif name == "compare_sessions":
-            return _handle_compare_sessions(storage, arguments)
-        else:
-            return [TextContent(type="text", text=f"Unknown tool: {name}")]
+    async def call_tool(
+        ctx: ServerRequestContext[Any], params: CallToolRequestParams
+    ) -> CallToolResult:
+        content: list[ContentBlock] = list(
+            _dispatch_tool(storage, params.name, params.arguments or {})
+        )
+        return CallToolResult(content=content)
+
+    server = Server("sundew-research", on_list_tools=list_tools, on_call_tool=call_tool)
 
     async with stdio_server() as (read_stream, write_stream):
         await server.run(read_stream, write_stream, server.create_initialization_options())
+
+
+def _dispatch_tool(
+    storage: StorageBackend, name: str, arguments: dict[str, Any]
+) -> list[TextContent]:
+    """Route a tool call to its handler.
+
+    Args:
+        storage: The storage backend.
+        name: Tool name.
+        arguments: Tool arguments.
+
+    Returns:
+        List of TextContent with the tool result.
+    """
+    if name == "get_recent_attacks":
+        return _handle_get_recent_attacks(storage, arguments)
+    elif name == "get_session_detail":
+        return _handle_get_session_detail(storage, arguments)
+    elif name == "classify_session":
+        return _handle_classify_session(storage, arguments)
+    elif name == "export_iocs":
+        return _handle_export_iocs(storage, arguments)
+    elif name == "compare_sessions":
+        return _handle_compare_sessions(storage, arguments)
+    else:
+        return [TextContent(type="text", text=f"Unknown tool: {name}")]
 
 
 def _handle_get_recent_attacks(storage: StorageBackend, args: dict[str, Any]) -> list[TextContent]:
