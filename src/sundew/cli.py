@@ -63,7 +63,14 @@ def serve(ctx: click.Context, host: str | None, port: int | None) -> None:
     )
 
     app = create_app(ctx.obj["config_path"])
-    uvicorn.run(app, host=server_host, port=server_port, log_level=cfg.logging.level)
+    # The persona sets its own Server header; uvicorn's would reveal the real stack
+    uvicorn.run(
+        app,
+        host=server_host,
+        port=server_port,
+        log_level=cfg.logging.level,
+        server_header=False,
+    )
 
 
 @main.command()

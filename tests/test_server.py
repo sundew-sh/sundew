@@ -52,3 +52,20 @@ async def test_catch_all_returns_response() -> None:
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get("/api/v1/anything")
         assert response.status_code in (200, 404, 503)
+
+
+def test_cli_serve_disables_uvicorn_server_header(monkeypatch: pytest.MonkeyPatch) -> None:
+    """uvicorn's own Server header would expose the honeypot behind the persona's."""
+    import uvicorn
+    from click.testing import CliRunner
+
+    import sundew.server
+    from sundew.cli import main
+
+    captured: dict[str, object] = {}
+    monkeypatch.setattr(sundew.server, "create_app", lambda _path: object())
+    monkeypatch.setattr(uvicorn, "run", lambda _app, **kwargs: captured.update(kwargs))
+
+    result = CliRunner().invoke(main, ["serve"])
+    assert result.exit_code == 0, result.output
+    assert captured["server_header"] is False
