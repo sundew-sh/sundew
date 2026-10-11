@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/sundew-sh/mintlify-docs/main/logo/light.svg" alt="Sundew" width="200">
+  <img src="https://raw.githubusercontent.com/sundew-sh/mintlify-docs/main/favicon.svg" alt="Sundew" width="72">
 </p>
 
 <h1 align="center">Sundew</h1>
@@ -22,17 +22,9 @@ Sundew deploys realistic-looking services that attract autonomous AI agents, the
 
 Named after the [sundew plant](https://en.wikipedia.org/wiki/Drosera) -- a carnivorous plant with sticky tentacles that glisten like dewdrops. Insects are attracted, land, and cannot escape. Beautiful, patient, effective.
 
-<!-- TODO: Replace with actual asciinema recording
-Demo recording plan (90 seconds):
-  1. `docker run -p 8080:8080 karpie28/sundew` -> Sundew starts, shows persona: "Northvane Analytics (fintech)"
-  2. Split terminal: simulate AI agent discovering /.well-known/ai-plugin.json,
-     reading /docs (OpenAPI), enumerating endpoints, connecting via MCP
-  3. Sundew logs light up with real-time classification, confidence scores climbing
-  4. `sundew query --last-session` -> full captured session with `ai_agent (confidence: 0.91)`
-  5. `sundew generate --persona healthcare` -> completely different deployment in seconds
--->
+<!-- Recorded with VHS (https://github.com/charmbracelet/vhs): run `vhs docs/demo.tape` to regenerate -->
 <p align="center">
-  <img src="https://github.com/sundew-sh/sundew/raw/main/docs/demo.gif" alt="Sundew demo" width="700">
+  <img src="https://raw.githubusercontent.com/sundew-sh/sundew/main/docs/demo.gif" alt="Sundew demo" width="700">
   <br>
   <em>Every deployment looks different. Every agent gets caught.</em>
 </p>
