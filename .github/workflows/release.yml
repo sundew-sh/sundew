@@ -82,11 +82,3 @@ jobs:
           tags: |
             karpie28/sundew:latest
             karpie28/sundew:${{ steps.version.outputs.VERSION }}
-
-      - name: Update Docker Hub description
-        uses: peter-evans/dockerhub-description@v5
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: karpie28/sundew
-          short-description: A carnivorous honeypot that detects autonomous AI agent attacks
